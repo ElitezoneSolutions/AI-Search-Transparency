@@ -41,9 +41,9 @@ export default function App() {
       if (response.keywords.length > 0) {
         setActiveKeyword('all');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to perform search. Please try again.');
+      setError(err.message || 'Failed to perform search. Please try again.');
     } finally {
       setIsLoading(false);
       setLoadingStep('');

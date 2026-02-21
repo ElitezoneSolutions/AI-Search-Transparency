@@ -2,10 +2,13 @@ import { GoogleGenAI } from "@google/genai";
 
 // Initialize the client
 const getAIClient = () => {
-  const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  // In Vite, environment variables are accessed via import.meta.env
+  // For production builds (like Vercel), VITE_ prefix is required
+  // @ts-ignore
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
   
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is missing. Please check your environment variables.");
+    throw new Error("API Key Missing: Please set VITE_GEMINI_API_KEY in your Vercel Environment Variables and redeploy.");
   }
   
   return new GoogleGenAI({ apiKey });
