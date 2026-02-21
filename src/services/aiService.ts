@@ -1,9 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize the client
-// Note: We are using Gemini as the AI provider since it is native to this environment 
-// and supports the Google Search grounding tool out of the box.
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAIClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is missing. Please check your environment variables.");
+  }
+  
+  return new GoogleGenAI({ apiKey });
+};
 
 export interface SearchResult {
   keyword: string;
@@ -22,6 +28,7 @@ export interface TransparencyResponse {
 
 export async function performTransparentSearch(userQuery: string, isFastMode: boolean = false): Promise<TransparencyResponse> {
   const model = "gemini-3-flash-preview";
+  const ai = getAIClient();
   
   const prompt = isFastMode ? `
     You are an AI Search Strategy engine. Your goal is to show the user how you would break down their query to find information.

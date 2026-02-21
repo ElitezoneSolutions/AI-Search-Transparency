@@ -8,6 +8,7 @@ import { performTransparentSearch, TransparencyResponse, SearchResult } from './
 import { SearchInput, KeywordChip, ResultCard, EmptyState, ExecutedQuery } from './components/SearchComponents';
 import { motion, AnimatePresence } from 'motion/react';
 import { Brain, Search as SearchIcon, Sparkles, Activity, Zap } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -264,6 +265,7 @@ export default function App() {
 
         {!isLoading && !data && !error && <EmptyState />}
       </div>
+      <Analytics />
     </div>
   );
 }
