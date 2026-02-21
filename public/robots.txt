@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemaps can be added here once dynamic routing is implemented
+# Sitemap: https://aisearchtransparency.com/sitemap.xml

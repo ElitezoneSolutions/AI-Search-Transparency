@@ -17,6 +17,7 @@ export interface TransparencyResponse {
   results: SearchResult[];
   actualQueries?: string[];
   isFastMode?: boolean;
+  answer?: string;
 }
 
 export async function performTransparentSearch(userQuery: string, isFastMode: boolean = false): Promise<TransparencyResponse> {
@@ -34,17 +35,19 @@ export async function performTransparentSearch(userQuery: string, isFastMode: bo
     Output Format (JSON only, no markdown):
     {
       "keywords": ["keyword 1", "keyword 2", ...],
-      "results": []
+      "results": [],
+      "answer": "I would research this by looking into [X], [Y], and [Z] to provide a comprehensive answer."
     }
   ` : `
-    You are an AI Search Transparency engine. Your goal is to show the user how you break down their query and find information.
+    You are an AI Search Transparency engine. Your goal is to show the user how you break down their query, find information, and provide a synthesized answer.
     
     User Query: "${userQuery}"
 
     Task:
     1. Analyze the query and generate 4-6 precise, distinct search keywords or sub-queries to research this topic thoroughly.
     2. Use the Google Search tool to find actual, relevant information for these keywords.
-    3. Return the data in a strict JSON format.
+    3. Based on the search results, provide a concise, factual answer to the user's query.
+    4. Return the data in a strict JSON format.
 
     Output Format (JSON only, no markdown):
     {
@@ -57,7 +60,8 @@ export async function performTransparentSearch(userQuery: string, isFastMode: bo
           "snippet": "Brief relevant excerpt..." 
         },
         ...
-      ]
+      ],
+      "answer": "A synthesized answer based on the results found..."
     }
 
     Ensure the "keyword" field in the results matches one of the generated keywords.
