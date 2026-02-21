@@ -1,0 +1,104 @@
+import { GoogleGenAI } from "@google/genai";
+
+// Initialize the client
+// Note: We are using Gemini as the AI provider since it is native to this environment 
+// and supports the Google Search grounding tool out of the box.
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export interface SearchResult {
+  keyword: string;
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export interface TransparencyResponse {
+  keywords: string[];
+  results: SearchResult[];
+  actualQueries?: string[];
+  isFastMode?: boolean;
+}
+
+export async function performTransparentSearch(userQuery: string, isFastMode: boolean = false): Promise<TransparencyResponse> {
+  const model = "gemini-3-flash-preview";
+  
+  const prompt = isFastMode ? `
+    You are an AI Search Strategy engine. Your goal is to show the user how you would break down their query to find information.
+    
+    User Query: "${userQuery}"
+
+    Task:
+    1. Analyze the query and generate 4-6 precise, distinct search keywords or sub-queries to research this topic thoroughly.
+    2. Return the data in a strict JSON format.
+
+    Output Format (JSON only, no markdown):
+    {
+      "keywords": ["keyword 1", "keyword 2", ...],
+      "results": []
+    }
+  ` : `
+    You are an AI Search Transparency engine. Your goal is to show the user how you break down their query and find information.
+    
+    User Query: "${userQuery}"
+
+    Task:
+    1. Analyze the query and generate 4-6 precise, distinct search keywords or sub-queries to research this topic thoroughly.
+    2. Use the Google Search tool to find actual, relevant information for these keywords.
+    3. Return the data in a strict JSON format.
+
+    Output Format (JSON only, no markdown):
+    {
+      "keywords": ["keyword 1", "keyword 2", ...],
+      "results": [
+        { 
+          "keyword": "keyword 1", 
+          "title": "Page Title", 
+          "url": "https://...", 
+          "snippet": "Brief relevant excerpt..." 
+        },
+        ...
+      ]
+    }
+
+    Ensure the "keyword" field in the results matches one of the generated keywords.
+    Try to find at least 1-2 results per keyword.
+  `;
+
+  const config: any = {
+    responseMimeType: "application/json",
+  };
+
+  if (!isFastMode) {
+    config.tools = [{ googleSearch: {} }];
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: config,
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("No response from AI");
+
+    // Extract actual search queries from grounding metadata
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+    const actualQueries = groundingMetadata?.webSearchQueries || [];
+
+    // Parse JSON
+    try {
+      const data = JSON.parse(text) as TransparencyResponse;
+      // Add actual queries to the response
+      data.actualQueries = isFastMode ? data.keywords : actualQueries;
+      data.isFastMode = isFastMode;
+      return data;
+    } catch (e) {
+      console.error("Failed to parse JSON:", text);
+      throw new Error("AI response was not valid JSON");
+    }
+  } catch (error) {
+    console.error("Search error:", error);
+    throw error;
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "AI Search Transparency",
+  "description": "Visualize how AI breaks down queries and finds information using real-time web search.",
+  "requestFramePermissions": []
+}
